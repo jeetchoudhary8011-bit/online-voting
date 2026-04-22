@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EliteVote | Modern Election Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --accent: #22d3ee;
+            --bg: #0f172a;
+            --card: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top left, #1e1b4b, var(--bg));
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Decorative Background Circles */
+        .circle {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+        }
+        .circle-1 { width: 300px; height: 300px; background: var(--primary); top: -100px; left: -100px; opacity: 0.3; }
+        .circle-2 { width: 400px; height: 400px; background: var(--secondary); bottom: -150px; right: -100px; opacity: 0.2; }
+
+        .container {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            width: 100%;
+            max-width: 450px;
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden { display: none; }
+
+        h1 { font-weight: 700; letter-spacing: -1px; margin-bottom: 0.5rem; background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
+        p.subtitle { text-align: center; color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
+
+        /* Form Controls */
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #cbd5e1; }
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        input:focus { outline: none; border-color: var(--accent); background: rgba(255, 255, 255, 0.1); }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Candidate Cards */
+        .candidate-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .candidate-item:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--accent); }
+        .candidate-item.selected { background: rgba(34, 211, 238, 0.1); border-color: var(--accent); box-shadow: 0 0 15px rgba(34, 211, 238, 0.2); }
+        
+        .c-img { width: 55px; height: 55px; border-radius: 12px; object-fit: cover; margin-right: 15px; }
+        .c-name { font-weight: 600; font-size: 1rem; margin: 0; }
+        .c-party { font-size: 0.75rem; color: #94a3b8; margin: 0; }
+
+        /* Results Display */
+        .res-row { margin-bottom: 1.5rem; }
+        .res-info { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; }
+        .progress-track { background: rgba(255, 255, 255, 0.1); height: 8px; border-radius: 10px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(to right, var(--accent), var(--secondary)); width: 0%; transition: width 1.5s cubic-bezier(0.1, 0.5, 0.5, 1); }
+
+        .alert { text-align: center; font-size: 0.8rem; height: 1rem; margin-top: 10px; }
+        .error { color: #f87171; }
+        .success { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+
+    <div class="container">
+        <h1>EliteVote</h1>
+        <p class="subtitle" id="main-subtitle">Secure Blockchain-Inspired Voting</p>
+
+        <div id="register-ui">
+            <div class="form-group">
+                <label>Voter Full Name</label>
+                <input type="text" id="reg-name" placeholder="Johnathan Doe">
+            </div>
+            <div class="form-group">
+                <label>Assign Secret Voter ID</label>
+                <input type="text" id="reg-id" placeholder="UID-8829">
+            </div>
+            <button class="btn" onclick="app.register()">Create Secure Identity</button>
+            <p style="text-align:center; font-size: 0.8rem; margin-top: 15px;">
+                Already verified? <a href="javascript:void(0)" onclick="app.show('login-ui')" style="color:var(--accent)">Login</a>
+            </p>
+        </div>
+
+        <div id="login-ui" class="hidden">
+            <div class="form-group">
+                <label>Enter Secret Voter ID</label>
+                <input type="text" id="login-id" placeholder="Your unique ID">
+            </div>
+            <button class="btn" onclick="app.login()">Verify & Enter</button>
+            <p style="text-align:center; font-size: 0.8rem; margin-top: 15px;">
+                New voter? <a href="javascript:void(0)" onclick="app.show('register-ui')" style="color:var(--accent)">Register</a>
+            </p>
+        </div>
+
+        <div id="vote-ui" class="hidden">
+            <div id="candidate-list">
+                </div>
+            <button class="btn" id="submit-btn" onclick="app.castVote()" disabled>Cast Secret Ballot</button>
+        </div>
+
+        <div id="result-ui" class="hidden">
+            <div id="results-container"></div>
+            <button class="btn" onclick="location.reload()" style="margin-top: 1rem; background: rgba(255,255,255,0.1);">Exit Portal</button>
+        </div>
+
+        <div id="message" class="alert"></div>
+    </div>
+
+    <script>
+        const app = {
+            candidates: [
+                { id: 1, name: "Narendra Modi", party: "Bharatia Janata Party (BJP)", img: "https://crystalpng.com/wp-content/uploads/2023/05/bjp-logo-png-1024x1024.png" },
+                { id: 2, name: "Rahul Gandhi", party: "Indian National Congress (INC)", img: "https://tse3.mm.bing.net/th/id/OIP.P-fDigcFV04Ps00Q1g0ehQHaHa?pid=Api&P=0&h=180" },
+                { id: 3, name: "Arvind Kejriwal", party: "Aam Aadmi Party (AAP)", img: "https://m.media-amazon.com/images/I/51YCqhDhqIS.jpg" }
+            ],
+            
+            selectedCandidate: null,
+            currentUser: null,
+
+            init() {
+                this.renderCandidates();
+                this.loadData();
+            },
+
+            loadData() {
+                this.users = JSON.parse(localStorage.getItem('ev_users')) || {};
+                this.tally = JSON.parse(localStorage.getItem('ev_tally')) || { 1: 0, 2: 0, 3: 0 };
+                this.votedList = JSON.parse(localStorage.getItem('ev_voted')) || [];
+            },
+
+            show(id) {
+                document.querySelectorAll('.container > div:not(.alert)').forEach(el => el.classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+                
+                const subs = {
+                    'register-ui': 'Secure Blockchain-Inspired Voting',
+                    'login-ui': 'Identity Verification Required',
+                    'vote-ui': 'Select One Candidate',
+                    'result-ui': 'Live Election Statistics'
+                };
+                document.getElementById('main-subtitle').innerText = subs[id];
+            },
+
+            renderCandidates() {
+                const container = document.getElementById('candidate-list');
+                container.innerHTML = this.candidates.map(c => `
+                    <div class="candidate-item" onclick="app.select(${c.id}, this)">
+                        <img src="${c.img}" class="c-img">
+                        <div style="flex:1">
+                            <p class="c-name">${c.name}</p>
+                            <p class="c-party">${c.party}</p>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            select(id, el) {
+                this.selectedCandidate = id;
+                document.querySelectorAll('.candidate-item').forEach(item => item.classList.remove('selected'));
+                el.classList.add('selected');
+                document.getElementById('submit-btn').disabled = false;
+            },
+
+            register() {
+                const name = document.getElementById('reg-name').value;
+                const id = document.getElementById('reg-id').value;
+                if(!name || !id) return this.msg("Please fill all fields", "error");
+                if(this.users[id]) return this.msg("ID already registered", "error");
+
+                this.users[id] = name;
+                localStorage.setItem('ev_users', JSON.stringify(this.users));
+                this.msg("Identity Created!", "success");
+                setTimeout(() => this.show('login-ui'), 1000);
+            },
+
+            login() {
+                const id = document.getElementById('login-id').value;
+                if(!this.users[id]) return this.msg("Invalid Voter ID", "error");
+                if(this.votedList.includes(id)) return this.msg("User has already voted", "error");
+
+                this.currentUser = id;
+                this.show('vote-ui');
+            },
+
+            castVote() {
+                this.tally[this.selectedCandidate]++;
+                this.votedList.push(this.currentUser);
+                
+                localStorage.setItem('ev_tally', JSON.stringify(this.tally));
+                localStorage.setItem('ev_voted', JSON.stringify(this.votedList));
+                
+                this.showResults();
+            },
+
+            showResults() {
+                this.show('result-ui');
+                const container = document.getElementById('results-container');
+                const total = this.votedList.length;
+
+                container.innerHTML = this.candidates.map(c => {
+                    const count = this.tally[c.id];
+                    const pct = total === 0 ? 0 : Math.round((count / total) * 100);
+                    return `
+                        <div class="res-row">
+                            <div class="res-info">
+                                <span>${c.name}</span>
+                                <span>${pct}% (${count})</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-bar" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            msg(text, type) {
+                const m = document.getElementById('message');
+                m.innerText = text;
+                m.className = `alert ${type}`;
+                setTimeout(() => m.innerText = "", 3000);
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>
